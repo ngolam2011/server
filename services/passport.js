@@ -22,17 +22,13 @@ passport.use(new GoogleStratery({
   callbackURL: '/auth/google/callback',
   proxy: true
 }, 
-  (accessToken, refreshToken, profile, done) => {
-    User.findOne({ googleId: profile.id })
-      .then((existingUser) => {
-        if (existingUser) {
-          // we already have a record with the given profile ID
-          done(null, existingUser);
+  async (accessToken, refreshToken, profile, done) => {
+    const existingUser = await User.findOne({ googleId: profile.id });
 
-        } else {
-          new User({ googleId: profile.id })
-            .save()
-            .then(user => done(null, user));
-        }
-      });
+    if (existingUser) {
+      return done(null, existingUser);
+    }
+    
+    const user = await new User({ googleId: profile.id }).save();
+    done(null, user);
 }));
